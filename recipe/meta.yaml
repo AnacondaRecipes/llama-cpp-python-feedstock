@@ -34,7 +34,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake
-    - make
+    - make  # [not win]
     - pkgconfig
 
   host:
