@@ -1,7 +1,7 @@
 {% set name = "llama-cpp-python" %}
 # NOTE: VERIFY llama_cpp_version before merging!
 {% set version = "0.3.16" %}
-{% set llama_cpp_version = "0.0.6810" %}
+{% set llama_cpp_version = "0.0.6872" %}
 
 package:
   name: {{ name|lower }}
@@ -11,8 +11,8 @@ source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
   sha256: 34ed0f9bd9431af045bb63d9324ae620ad0536653740e9bb163a2e1fcb973be6
   patches:
-    # Asks cdll to look for the library in the path as well.
-    - try-lib-in-path.patch
+    # Adapt shared library relocation for conda environments
+    - 0001-Adapt-shared-library-relocation.patch
 
 build:
   number: 0
@@ -56,7 +56,7 @@ requirements:
     - fastapi >=0.100.0
     - pydantic-settings >=2.0.1
     - sse-starlette >=1.6.1
-    - starlette-context >=0.3.6,<0.4
+    - starlette-context >=0.3.6
     - pyyaml >=5.1
 test:
   imports:
