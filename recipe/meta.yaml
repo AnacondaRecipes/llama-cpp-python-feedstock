@@ -1,7 +1,8 @@
 {% set name = "llama-cpp-python" %}
-# NOTE: VERIFY llama_cpp_version before merging!
 {% set version = "0.3.16" %}
-{% set llama_cpp_version = "0.0.6872" %}
+# Building vendored llama.cpp (commit 4227c9b) instead of using external dependency
+# because llama-cpp-python 0.3.16 requires llama.cpp >= b6173, but the available
+# llama.cpp b6872 has breaking API changes (removed llama_get_kv_self function)
 
 package:
   name: {{ name|lower }}
@@ -22,8 +23,9 @@ build:
     - set CMAKE_ARGS=%CMAKE_ARGS% {{ key }}={{ value }}          # [win]
     {%- endmacro %}
 
-    {{ cmake_args("-DLLAMA_BUILD", "OFF") }}
-    {{ cmake_args("-DLLAVA_BUILD", "OFF") }}
+    # Build vendored llama.cpp instead of using external package
+    {{ cmake_args("-DLLAMA_BUILD", "ON") }}
+    {{ cmake_args("-DLLAVA_BUILD", "ON") }}
 
     - {{ PYTHON }} -m pip install . -vv
 requirements:
@@ -49,7 +51,7 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    - llama.cpp >={{ llama_cpp_version }}
+    # Note: No external llama.cpp dependency - using vendored version (commit 4227c9b)
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
