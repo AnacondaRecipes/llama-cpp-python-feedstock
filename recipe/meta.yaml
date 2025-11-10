@@ -52,6 +52,9 @@ requirements:
     - jinja2 >=2.11.3
 
     # Note: No external llama.cpp dependency - using vendored version (commit 4227c9b)
+    # Vendored llama.cpp requires OpenMP
+    - _openmp_mutex  # [linux]
+    - llvm-openmp    # [osx]
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
