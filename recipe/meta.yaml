@@ -23,9 +23,9 @@ build:
     - set CMAKE_ARGS=%CMAKE_ARGS% {{ key }}={{ value }}          # [win]
     {%- endmacro %}
 
-    # Build vendored llama.cpp instead of using external package
+    # Build vendored llama.cpp library (not tools, to avoid GLIBC issues)
     {{ cmake_args("-DLLAMA_BUILD", "ON") }}
-    {{ cmake_args("-DLLAVA_BUILD", "ON") }}
+    {{ cmake_args("-DLLAVA_BUILD", "OFF") }}
 
     - {{ PYTHON }} -m pip install . -vv
 requirements:
