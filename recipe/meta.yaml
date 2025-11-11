@@ -19,6 +19,10 @@ source:
 
 build:
   number: 0
+  missing_dso_whitelist:  # [win]
+    - $RPATH/ggml-base.dll  # [win]
+    - $RPATH/ggml-cpu.dll   # [win]
+    - $RPATH/ggml.dll       # [win]
   script:
     {% macro cmake_args(key, value) -%}
     - export CMAKE_ARGS="${CMAKE_ARGS} {{ key }}={{ value }}"    # [unix]
