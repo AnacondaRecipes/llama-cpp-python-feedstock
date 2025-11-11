@@ -45,6 +45,7 @@ requirements:
     - python
     - scikit-build-core >=0.5.1
     - pip
+    - llvm-openmp    # [osx]
 
   run:
     - python
