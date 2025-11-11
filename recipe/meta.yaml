@@ -23,17 +23,10 @@ build:
     - $RPATH/ggml-base.dll  # [win]
     - $RPATH/ggml-cpu.dll   # [win]
     - $RPATH/ggml.dll       # [win]
-  script:
-    {% macro cmake_args(key, value) -%}
-    - export CMAKE_ARGS="${CMAKE_ARGS} {{ key }}={{ value }}"    # [unix]
-    - set CMAKE_ARGS=%CMAKE_ARGS% {{ key }}={{ value }}          # [win]
-    {%- endmacro %}
-
-    # Build vendored llama.cpp library (not tools, to avoid GLIBC issues)
-    {{ cmake_args("-DLLAMA_BUILD", "ON") }}
-    {{ cmake_args("-DLLAVA_BUILD", "OFF") }}
-
-    - {{ PYTHON }} -m pip install . -vv
+  script:  # [unix]
+    - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=ON"    # [unix]
+    - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
+    - {{ PYTHON }} -m pip install . -vv                     # [unix]
 requirements:
   build:
     - python                                 # [build_platform != target_platform]
