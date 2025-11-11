@@ -14,6 +14,8 @@ source:
   patches:
     # Adapt shared library relocation for conda environments
     - 0001-Adapt-shared-library-relocation.patch
+    # Fix ARM SVE detection for old kernel headers on aarch64
+    - 0002-Fix-ARM-SVE-detection-for-old-kernel-headers.patch  # [linux and aarch64]
 
 build:
   number: 0
