@@ -26,12 +26,12 @@ build:
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=ON"    # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
-    - {{ PYTHON }} -m pip install . -vv                     # [unix]
+    - {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation  # [unix]
 requirements:
   build:
     - python                                 # [build_platform != target_platform]
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
-
+    - {{ stdlib('c') }}
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
     - cmake
@@ -74,6 +74,12 @@ test:
 about:
   home: https://github.com/abetlen/llama-cpp-python
   summary: Python bindings for the llama.cpp library
+  description: |
+    Python bindings for llama.cpp, providing a simple Python interface for
+    inference with Large Language Models (LLMs) using the llama.cpp backend.
+    Supports CPU and GPU acceleration with vendored llama.cpp library.
+  dev_url: https://github.com/abetlen/llama-cpp-python
+  doc_url: https://llama-cpp-python.readthedocs.io
   license: MIT
   license_file:
     - LICENSE.md

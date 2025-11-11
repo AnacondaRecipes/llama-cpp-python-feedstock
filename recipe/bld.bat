@@ -3,7 +3,7 @@ set CMAKE_ARGS=%CMAKE_ARGS% -DLLAMA_BUILD=ON
 set CMAKE_ARGS=%CMAKE_ARGS% -DLLAVA_BUILD=OFF
 
 :: Install the package
-%PYTHON% -m pip install . -vv
+%PYTHON% -m pip install . -vv --no-deps --no-build-isolation
 if errorlevel 1 exit 1
 
 :: Move DLLs from site-packages/bin to Library/bin (standard conda location)
