@@ -8,8 +8,9 @@ if errorlevel 1 exit 1
 
 :: Move DLLs from site-packages/bin to Library/bin (standard conda location)
 :: This matches the expectation in the patched llama_cpp.py
+if not exist %LIBRARY_BIN% mkdir %LIBRARY_BIN%
+
 if exist %SP_DIR%\bin\*.dll (
-    if not exist %LIBRARY_BIN% mkdir %LIBRARY_BIN%
     move %SP_DIR%\bin\*.dll %LIBRARY_BIN%\
     if errorlevel 1 exit 1
 )
