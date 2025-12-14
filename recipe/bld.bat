@@ -1,22 +1,7 @@
-:: Set CMake arguments for vendored llama.cpp build
-set CMAKE_ARGS=%CMAKE_ARGS% -DLLAMA_BUILD=ON
+:: Set CMake arguments to use external llama.cpp library
+set CMAKE_ARGS=%CMAKE_ARGS% -DLLAMA_BUILD=OFF
 set CMAKE_ARGS=%CMAKE_ARGS% -DLLAVA_BUILD=OFF
 
 :: Install the package
 %PYTHON% -m pip install . -vv --no-deps --no-build-isolation
 if errorlevel 1 exit 1
-
-:: Move DLLs from site-packages/bin to Library/bin (standard conda location)
-:: This matches the expectation in the patched llama_cpp.py
-if not exist %LIBRARY_BIN% mkdir %LIBRARY_BIN%
-
-if exist %SP_DIR%\bin\*.dll (
-    move %SP_DIR%\bin\*.dll %LIBRARY_BIN%\
-    if errorlevel 1 exit 1
-)
-
-:: Also move DLLs from site-packages/llama_cpp/lib to Library/bin
-if exist %SP_DIR%\llama_cpp\lib\*.dll (
-    move %SP_DIR%\llama_cpp\lib\*.dll %LIBRARY_BIN%\
-    if errorlevel 1 exit 1
-)

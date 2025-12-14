@@ -1,8 +1,8 @@
 {% set name = "llama-cpp-python" %}
 {% set version = "0.3.16" %}
-# Building vendored llama.cpp (commit 4227c9b) instead of using external dependency
-# because llama-cpp-python 0.3.16 requires llama.cpp >= b6173, but the available
-# llama.cpp b6872 has breaking API changes (removed llama_get_kv_self function)
+# Using external llama.cpp b6188 package (version constraint: >=0.0.6188,<0.0.6239)
+# llama-cpp-python 0.3.16 requires llama.cpp with llama_get_kv_self() API,
+# which was removed in b6239 (PR #15472)
 
 package:
   name: {{ name|lower }}
@@ -12,10 +12,8 @@ source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
   sha256: 34ed0f9bd9431af045bb63d9324ae620ad0536653740e9bb163a2e1fcb973be6
   patches:
-    # Adapt shared library relocation for conda environments
+    # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
-    # Fix ARM SVE detection for old kernel headers on aarch64
-    - 0002-Fix-ARM-SVE-detection-for-old-kernel-headers.patch  # [linux and aarch64]
 
 build:
   number: 0
@@ -24,7 +22,7 @@ build:
     - $RPATH/ggml-cpu.dll   # [win]
     - $RPATH/ggml.dll       # [win]
   script:  # [unix]
-    - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=ON"    # [unix]
+    - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
     - {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation  # [unix]
 requirements:
@@ -42,6 +40,7 @@ requirements:
     - python
     - scikit-build-core >=0.5.1
     - pip
+    - llama.cpp >=0.0.6188,<0.0.6239
     - llvm-openmp    # [osx]
 
   run:
@@ -51,10 +50,8 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # Note: No external llama.cpp dependency - using vendored version (commit 4227c9b)
-    # Vendored llama.cpp requires OpenMP
-    - _openmp_mutex  # [linux]
-    - llvm-openmp    # [osx]
+    # External llama.cpp package (b6188 - last version with llama_get_kv_self API)
+    - llama.cpp >=0.0.6188,<0.0.6239
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
@@ -77,7 +74,7 @@ about:
   description: |
     Python bindings for llama.cpp, providing a simple Python interface for
     inference with Large Language Models (LLMs) using the llama.cpp backend.
-    Supports CPU and GPU acceleration with vendored llama.cpp library.
+    Supports CPU and GPU acceleration with external llama.cpp library.
   dev_url: https://github.com/abetlen/llama-cpp-python
   doc_url: https://llama-cpp-python.readthedocs.io
   license: MIT
