@@ -17,7 +17,6 @@ source:
 
 build:
   number: 0
-  missing_dso_whitelist:  # [win]
     - $RPATH/ggml-base.dll  # [win]
     - $RPATH/ggml-cpu.dll   # [win]
     - $RPATH/ggml.dll       # [win]
