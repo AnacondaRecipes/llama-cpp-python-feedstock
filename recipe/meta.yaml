@@ -25,7 +25,11 @@ requirements:
   build:
     - python                                 # [build_platform != target_platform]
     - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    # Compilers needed because scikit-build-core runs CMake which requires C/C++ compiler
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
     - cmake
+    - make  # [not win]
 
   host:
     - python
