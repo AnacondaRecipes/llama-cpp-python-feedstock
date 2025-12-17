@@ -20,7 +20,7 @@ build:
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
-    - {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+    - {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation  # [unix]
 requirements:
   build:
     - python                                 # [build_platform != target_platform]
