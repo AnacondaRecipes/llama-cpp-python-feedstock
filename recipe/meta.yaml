@@ -17,7 +17,6 @@ source:
 
 build:
   number: 0
-    - $RPATH/ggml-base.dll  # [win]
     - $RPATH/ggml-cpu.dll   # [win]
     - $RPATH/ggml.dll       # [win]
   script:  # [unix]
