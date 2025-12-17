@@ -40,8 +40,6 @@ requirements:
     - python
     - scikit-build-core >=0.5.1
     - pip
-    - llama.cpp >=0.0.6188,<0.0.6239
-    - llvm-openmp    # [osx]
 
   run:
     - python
