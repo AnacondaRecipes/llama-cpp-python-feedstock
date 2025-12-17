@@ -35,6 +35,7 @@ requirements:
     - python
     - scikit-build-core >=0.5.1
     - pip
+    - cmake  # Required by scikit-build-core at build time
 
   run:
     - python
