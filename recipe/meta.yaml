@@ -17,7 +17,6 @@ source:
 
 build:
   number: 0
-    - $RPATH/ggml-cpu.dll   # [win]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
