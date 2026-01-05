@@ -1,6 +1,7 @@
 {% set name = "llama-cpp-python" %}
 {% set version = "0.3.16" %}
 # Using external llama.cpp b6188 package (version constraint: >=0.0.6188,<0.0.6239)
+# Rebuild to retry CI
 # llama-cpp-python 0.3.16 requires llama.cpp with llama_get_kv_self() API,
 # which was removed in b6239 (PR #15472)
 
