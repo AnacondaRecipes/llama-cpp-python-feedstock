@@ -1,7 +1,6 @@
 {% set name = "llama-cpp-python" %}
 {% set version = "0.3.16" %}
 # Using external llama.cpp b6188 package (version constraint: >=0.0.6188,<0.0.6239)
-# Rebuild to retry CI
 # llama-cpp-python 0.3.16 requires llama.cpp with llama_get_kv_self() API,
 # which was removed in b6239 (PR #15472)
 
@@ -15,6 +14,8 @@ source:
   patches:
     # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
+    # Load ggml backends when using external llama.cpp (fixes issue #2069)
+    - 0002-Load-ggml-backends-for-external-llama.cpp.patch
 
 build:
   number: 0
