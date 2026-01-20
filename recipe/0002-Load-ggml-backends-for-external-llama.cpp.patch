@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: xkong-anaconda <xkong@anaconda.com>
+Date: Sun, 5 Jan 2025 00:00:00 +0000
+Subject: [PATCH] Load ggml backends for external llama.cpp
+
+When using an external llama.cpp library (LLAMA_BUILD=OFF), the ggml
+backends are not automatically loaded. This patch calls
+ggml_backend_load_all() during initialization to load all available
+backends from the external library.
+
+See: https://github.com/abetlen/llama-cpp-python/issues/2069
+---
+ llama_cpp/llama.py | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/llama_cpp/llama.py b/llama_cpp/llama.py
+--- a/llama_cpp/llama.py
++++ b/llama_cpp/llama.py
+@@ -52,6 +52,24 @@ from ._logger import set_verbose
+ from ._utils import suppress_stdout_stderr
+
+
++def _load_ggml_backends() -> None:
++    """Load all ggml backends from the external llama.cpp library.
++
++    This is needed when using an external llama.cpp library (LLAMA_BUILD=OFF)
++    as the backends are not automatically loaded in that case.
++    See: https://github.com/abetlen/llama-cpp-python/issues/2069
++    """
++    try:
++        # Try to get ggml_backend_load_all from the already-loaded llama library
++        func = llama_cpp._lib.ggml_backend_load_all
++        func.argtypes = []
++        func.restype = None
++        func()
++    except (AttributeError, OSError):
++        # Function not available - backends may be statically linked
++        pass
++
++
+ class Llama:
+     """High-level Python wrapper for a llama.cpp model."""
+
+@@ -253,6 +271,9 @@ class Llama:
+         set_verbose(verbose)
+
+         if not Llama.__backend_initialized:
++            # Load ggml backends for external llama.cpp library
++            with suppress_stdout_stderr(disable=verbose):
++                _load_ggml_backends()
+             with suppress_stdout_stderr(disable=verbose):
+                 llama_cpp.llama_backend_init()
+             Llama.__backend_initialized = True
