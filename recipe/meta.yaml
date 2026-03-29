@@ -44,8 +44,8 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — 0.3.19 vendors ~b8531
-    - llama.cpp >=0.0.8574
+    # External llama.cpp package — 0.3.19 vendors b8531
+    - llama.cpp >=0.0.8531
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
