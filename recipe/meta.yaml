@@ -16,6 +16,7 @@ source:
 
 build:
   number: 0
+  skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
@@ -51,7 +52,7 @@ requirements:
     - fastapi >=0.100.0
     - pydantic-settings >=2.0.1
     - sse-starlette >=1.6.1
-    - starlette-context >=0.3.6,<0.4
+    - starlette-context >=0.3.6
     - pyyaml >=5.1
 test:
   imports:
@@ -71,6 +72,7 @@ about:
   dev_url: https://github.com/abetlen/llama-cpp-python
   doc_url: https://llama-cpp-python.readthedocs.io
   license: MIT
+  license_family: MIT
   license_file:
     - LICENSE.md
 
