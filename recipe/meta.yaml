@@ -59,6 +59,8 @@ test:
     - llama_cpp
   commands:
     - pip check
+    # Verify external llama.cpp shared library loads successfully
+    - python -c "from llama_cpp import llama_cpp; print(llama_cpp._lib)"
   requires:
     - pip
 
