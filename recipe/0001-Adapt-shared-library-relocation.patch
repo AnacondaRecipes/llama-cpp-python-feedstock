@@ -3,17 +3,21 @@ From: Julien Jerphanion <git@jjerphan.xyz>
 Date: Fri, 22 Aug 2025 10:22:47 +0200
 Subject: [PATCH] Adapt shared library relocation
 
+Allow loading llama.cpp shared library from system paths (conda prefix)
+in addition to the bundled lib directory. Also handle Windows conda
+prefix layout where DLLs are in Library/bin/.
+
+Regenerated for 0.3.19.
+
 Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
 ---
  llama_cpp/_ctypes_extensions.py | 11 +++++++++--
  llama_cpp/llama_cpp.py          | 13 +++++++++++++
  2 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/llama_cpp/_ctypes_extensions.py b/llama_cpp/_ctypes_extensions.py
-index e88ed38..0acd159 100644
---- a/llama_cpp/_ctypes_extensions.py
-+++ b/llama_cpp/_ctypes_extensions.py
-@@ -29,16 +29,21 @@ def load_shared_library(lib_base_name: str, base_path: pathlib.Path):
+--- a/llama_cpp/_ctypes_extensions.py	2022-11-09 06:37:21.000000000 -0600
++++ b/llama_cpp/_ctypes_extensions.py	2026-03-29 15:07:49.526575091 -0500
+@@ -29,16 +29,21 @@
      if sys.platform.startswith("linux") or sys.platform.startswith("freebsd"):
          lib_paths += [
              base_path / f"lib{lib_base_name}.so",
@@ -35,7 +39,7 @@ index e88ed38..0acd159 100644
          ]
      else:
          raise RuntimeError("Unsupported platform")
-@@ -62,14 +67,16 @@ def load_shared_library(lib_base_name: str, base_path: pathlib.Path):
+@@ -62,14 +67,16 @@
  
      # Try to load the shared library, handling potential errors
      for lib_path in lib_paths:
@@ -54,19 +58,17 @@ index e88ed38..0acd159 100644
      )
  
  
-diff --git a/llama_cpp/llama_cpp.py b/llama_cpp/llama_cpp.py
-index 711d42a..a23c778 100644
---- a/llama_cpp/llama_cpp.py
-+++ b/llama_cpp/llama_cpp.py
-@@ -3,6 +3,7 @@ from __future__ import annotations
+--- a/llama_cpp/llama_cpp.py	2022-11-09 06:37:21.000000000 -0600
++++ b/llama_cpp/llama_cpp.py	2026-03-29 15:08:09.286751211 -0500
+@@ -3,6 +3,7 @@
  import os
  import ctypes
  import pathlib
 +import sys
+ import warnings
  
  from typing import (
-     Callable,
-@@ -32,7 +33,19 @@ if TYPE_CHECKING:
+@@ -33,7 +34,19 @@
  
  # Specify the base name of the shared library to load
  _lib_base_name = "llama"
@@ -83,9 +85,6 @@ index 711d42a..a23c778 100644
 +    __prefix_dir = __this_file_dir.parent.parent.parent
 +    _override_base_path = __prefix_dir / "Library" / "bin"
 +
- _base_path = pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / "lib" if _override_base_path is None else pathlib.Path(_override_base_path)
- # Load the library
- _lib = load_shared_library(_lib_base_name, _base_path)
--- 
-2.50.1
-
+ _base_path = (
+     pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / "lib"
+     if _override_base_path is None

@@ -1,8 +1,5 @@
 {% set name = "llama-cpp-python" %}
-{% set version = "0.3.16" %}
-# Using external llama.cpp b6188 package (version constraint: >=0.0.6188,<0.0.6239)
-# llama-cpp-python 0.3.16 requires llama.cpp with llama_get_kv_self() API,
-# which was removed in b6239 (PR #15472)
+{% set version = "0.3.19" %}
 
 package:
   name: {{ name|lower }}
@@ -10,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
-  sha256: 34ed0f9bd9431af045bb63d9324ae620ad0536653740e9bb163a2e1fcb973be6
+  sha256: 6816e4a0a74ae9a356e7a0546e13147543f01f695c86a28d940e4b86519acf13
   patches:
     # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
@@ -19,6 +16,7 @@ source:
 
 build:
   number: 0
+  skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAVA_BUILD=OFF"   # [unix]
@@ -35,7 +33,7 @@ requirements:
 
   host:
     - python
-    - scikit-build-core >=0.5.1
+    - scikit-build-core >=0.9.2
     - pip
     - cmake  # Required by scikit-build-core at build time
 
@@ -46,8 +44,8 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package (b6188 - last version with llama_get_kv_self API)
-    - llama.cpp >=0.0.6188,<0.0.6239
+    # External llama.cpp package — 0.3.19 vendors b8531, tested with b8574
+    - llama.cpp >=0.0.8531,<0.0.8575
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
@@ -61,6 +59,8 @@ test:
     - llama_cpp
   commands:
     - pip check
+    # Verify external llama.cpp shared library loads successfully
+    - python -c "from llama_cpp import llama_cpp; print(llama_cpp._lib)"
   requires:
     - pip
 
@@ -74,6 +74,7 @@ about:
   dev_url: https://github.com/abetlen/llama-cpp-python
   doc_url: https://llama-cpp-python.readthedocs.io
   license: MIT
+  license_family: MIT
   license_file:
     - LICENSE.md
 
