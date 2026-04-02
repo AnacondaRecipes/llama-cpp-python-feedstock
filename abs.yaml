@@ -1,3 +1,0 @@
-# Staging channel for llama.cpp b8574 (not yet released to pkgs/main)
-channels:
-  - https://staging.continuum.io/pbp/llama-cpp-b8574-staging
