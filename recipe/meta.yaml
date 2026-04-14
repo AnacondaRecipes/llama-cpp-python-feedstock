@@ -15,7 +15,7 @@ source:
     - 0002-Load-ggml-backends-for-external-llama.cpp.patch
 
 build:
-  number: 0
+  number: 1
   skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"   # [unix]
@@ -44,8 +44,8 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — 0.3.19 vendors b8531, tested with b8574 (released to pkgs/main)
-    - llama.cpp >=0.0.8531,<0.0.8575
+    # External llama.cpp package — 0.3.19 vendors b8531; relies on import test to verify ABI compatibility with newer builds
+    - llama.cpp >=0.0.8531,<0.0.8729
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
