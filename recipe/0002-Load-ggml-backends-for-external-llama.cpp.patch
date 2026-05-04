@@ -13,13 +13,12 @@ See: https://github.com/abetlen/llama-cpp-python/issues/2069
  llama_cpp/llama.py | 21 +++++++++++++++++++++
  1 file changed, 21 insertions(+)
 
-diff --git a/llama_cpp/llama.py b/llama_cpp/llama.py
 --- a/llama_cpp/llama.py
 +++ b/llama_cpp/llama.py
 @@ -52,6 +52,24 @@ from ._logger import set_verbose
  from ._utils import suppress_stdout_stderr
-
-
+ 
+ 
 +def _load_ggml_backends() -> None:
 +    """Load all ggml backends from the external llama.cpp library.
 +
@@ -40,10 +39,10 @@ diff --git a/llama_cpp/llama.py b/llama_cpp/llama.py
 +
  class Llama:
      """High-level Python wrapper for a llama.cpp model."""
-
-@@ -253,6 +271,9 @@ class Llama:
+ 
+@@ -204,6 +222,9 @@ class Llama:
          set_verbose(verbose)
-
+ 
          if not Llama.__backend_initialized:
 +            # Load ggml backends for external llama.cpp library
 +            with suppress_stdout_stderr(disable=verbose):
