@@ -15,9 +15,9 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
  llama_cpp/llama_cpp.py          | 13 +++++++++++++
  2 files changed, 22 insertions(+), 2 deletions(-)
 
---- a/llama_cpp/_ctypes_extensions.py	2022-11-09 06:37:21.000000000 -0600
-+++ b/llama_cpp/_ctypes_extensions.py	2026-03-29 15:07:49.526575091 -0500
-@@ -29,16 +29,21 @@
+--- a/llama_cpp/_ctypes_extensions.py
++++ b/llama_cpp/_ctypes_extensions.py
+@@ -29,16 +29,21 @@ def load_shared_library(lib_base_name: s
      if sys.platform.startswith("linux") or sys.platform.startswith("freebsd"):
          lib_paths += [
              base_path / f"lib{lib_base_name}.so",
@@ -39,7 +39,7 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
          ]
      else:
          raise RuntimeError("Unsupported platform")
-@@ -62,14 +67,16 @@
+@@ -62,14 +67,16 @@ def load_shared_library(lib_base_name: s
  
      # Try to load the shared library, handling potential errors
      for lib_path in lib_paths:
@@ -58,9 +58,9 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
      )
  
  
---- a/llama_cpp/llama_cpp.py	2022-11-09 06:37:21.000000000 -0600
-+++ b/llama_cpp/llama_cpp.py	2026-03-29 15:08:09.286751211 -0500
-@@ -3,6 +3,7 @@
+--- a/llama_cpp/llama_cpp.py
++++ b/llama_cpp/llama_cpp.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
  import os
  import ctypes
  import pathlib
@@ -68,7 +68,7 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
  import warnings
  
  from typing import (
-@@ -33,7 +34,19 @@
+@@ -33,7 +34,19 @@ if TYPE_CHECKING:
  
  # Specify the base name of the shared library to load
  _lib_base_name = "llama"
