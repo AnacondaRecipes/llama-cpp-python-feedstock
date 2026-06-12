@@ -1,5 +1,5 @@
 {% set name = "llama-cpp-python" %}
-{% set version = "0.3.22" %}
+{% set version = "0.3.28" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
-  sha256: 93c54af95d917fe6d6d70039efe16ca9240634d11010f5aaf795261b9f43042f
+  sha256: 958227b394f413425d6039952096daa0b8b98328c6b99d652862aec775f1672d
   patches:
     # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
@@ -44,8 +44,8 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — 0.3.22 vendors b9008; relies on import test to verify ABI compatibility with the build available on pkgs/main
-    - llama.cpp >=0.0.8728,<0.0.9009
+    # External llama.cpp package — 0.3.28 vendors b9553; relies on import test to verify ABI compatibility with the build available on pkgs/main
+    - llama.cpp >=0.0.9453,<0.0.9554
 
     # Split into llama-cpp-python-server
     - uvicorn >=0.22.0
