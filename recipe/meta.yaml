@@ -1,5 +1,5 @@
 {% set name = "llama-cpp-python" %}
-{% set version = "0.3.34" %}
+{% set version = "0.3.35" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
-  sha256: d849d286d808284f1d3ec1bd6875572430d29d1f9574a010232caa4e9cef0e35
+  sha256: 1139dbb54509074b70893fab8554e3b079aa9f4d312058ce4018ef0019e3de12
   patches:
     # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
@@ -45,10 +45,10 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — 0.3.34 vendors b9976; b9976 is not on
-    # pkgs/main (only b10068 and b10241 are in the vendored ballpark), so the
-    # pin widens forward. Import test verifies ABI compatibility at runtime.
-    - llama.cpp >=0.0.10068,<0.0.10242
+    # External llama.cpp package — 0.3.35 vendors b10454; b10454 is not on
+    # pkgs/main. Pin to b10488 (34 commits ahead of vendored, released via
+    # PKG-16387). Import test verifies ABI compatibility at runtime.
+    - llama.cpp >=0.0.10488,<0.0.10489
 
     # Server extras (no llama-cpp-python-server split package); kept in run:
     # for feature completeness. starlette-context <0.4 cap intentionally not
