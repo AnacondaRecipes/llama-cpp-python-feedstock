@@ -78,7 +78,8 @@ test:
     # build shipped bindings against a llama.cpp whose `llama_model_params`
     # layout differed, so `vocab_only` read as 32 instead of 0/1 and consumers
     # segfaulted. This test catches the same class of ABI drift at CI time.
-    - python -c "from llama_cpp import llama_cpp; p = llama_cpp.llama_model_default_params(); assert p.vocab_only in (0, 1, False, True), f'ABI drift with external llama.cpp: vocab_only={p.vocab_only!r}'; print(f'ABI ok: vocab_only={bool(p.vocab_only)}')"
+    - |-
+      python -c "from llama_cpp import llama_cpp; p = llama_cpp.llama_model_default_params(); assert p.vocab_only in (0, 1, False, True), f'ABI drift with external llama.cpp: vocab_only={p.vocab_only!r}'; print(f'ABI ok: vocab_only={bool(p.vocab_only)}')"
   requires:
     - pip
 
