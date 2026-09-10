@@ -15,7 +15,7 @@ source:
     - 0002-Load-ggml-backends-for-external-llama.cpp.patch
 
 build:
-  number: 1
+  number: 2
   skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"  # [unix]
@@ -45,14 +45,14 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — 0.3.35 vendors b10454, which is not on
-    # pkgs/main. Two narrow ranges (pipe-OR MatchSpec) covering both llama.cpp
-    # builds we've validated against 0.3.35 bindings on pkgs/main:
-    #   * 0.0.10488 — original ship target (PKG-16387, 34 commits ahead of b10454)
-    #   * 0.3.0.10760 — hybrid version scheme adopted at PKG-16388 (306 ahead)
-    # Import test verifies ABI compatibility at runtime. Drop the 0.0.10488
-    # range when it ages out of pkgs/main.
-    - llama.cpp >=0.0.10488,<0.0.10489|>=0.3.0.10760,<0.3.0.10761
+    # External llama.cpp package — pinned to a single build validated ABI-
+    # compatible with these 0.3.35 bindings (vendored b10454, 34 commits behind).
+    # The previous two-range pin (also allowing 0.3.0.10760, 306 commits ahead)
+    # let the solver pick a llama.cpp whose struct layout no longer matched the
+    # bindings, causing `llama_model_default_params().vocab_only == 32` on macOS
+    # and segfaults for consumers (Sep 2026 incident, Jim Kitchen / outerbounds).
+    # Widen only after a rebuild against the newer llama.cpp SHA.
+    - llama.cpp >=0.0.10488,<0.0.10489
 
     # Server extras (no llama-cpp-python-server split package); kept in run:
     # for feature completeness. starlette-context <0.4 cap intentionally not
@@ -71,6 +71,14 @@ test:
     - pip check
     # Verify external llama.cpp shared library loads successfully
     - python -c "from llama_cpp import llama_cpp; print(llama_cpp._lib)"
+    # ABI smoke test — dlopen alone doesn't catch struct-layout drift between
+    # our vendored ctypes bindings and the external llama.cpp .so. Call a
+    # struct-returning C entry point and sanity-check a known-default field.
+    # Regression fixture for the Sep 2026 pin-widening incident: the previous
+    # build shipped bindings against a llama.cpp whose `llama_model_params`
+    # layout differed, so `vocab_only` read as 32 instead of 0/1 and consumers
+    # segfaulted. This test catches the same class of ABI drift at CI time.
+    - python -c "from llama_cpp import llama_cpp; p = llama_cpp.llama_model_default_params(); assert p.vocab_only in (0, 1, False, True), f'ABI drift with external llama.cpp: vocab_only={p.vocab_only!r}'; print(f'ABI ok: vocab_only={bool(p.vocab_only)}')"
   requires:
     - pip
 
