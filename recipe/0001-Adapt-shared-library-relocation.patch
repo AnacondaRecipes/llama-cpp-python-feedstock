@@ -1,4 +1,4 @@
-From 8156a3728b89cbb944abf5af8376100da8832965 Mon Sep 17 00:00:00 2001
+From d0bff49860b870b02cbf273921f14d37e33815cc Mon Sep 17 00:00:00 2001
 From: Julien Jerphanion <git@jjerphan.xyz>
 Date: Fri, 22 Aug 2025 10:22:47 +0200
 Subject: [PATCH] Adapt shared library relocation
@@ -7,7 +7,7 @@ Allow loading llama.cpp shared library from system paths (conda prefix)
 in addition to the bundled lib directory. Also handle Windows conda
 prefix layout where DLLs are in Library/bin/.
 
-Regenerated for 0.3.19.
+Regenerated for 0.3.36.
 
 Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
 ---
@@ -15,10 +15,12 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
  llama_cpp/llama_cpp.py          | 13 +++++++++++++
  2 files changed, 22 insertions(+), 2 deletions(-)
 
+diff --git a/llama_cpp/_ctypes_extensions.py b/llama_cpp/_ctypes_extensions.py
+index 02cee8a..94d62e2 100644
 --- a/llama_cpp/_ctypes_extensions.py
 +++ b/llama_cpp/_ctypes_extensions.py
-@@ -29,16 +29,21 @@ def load_shared_library(lib_base_name: s
-     if sys.platform.startswith("linux") or sys.platform.startswith("freebsd"):
+@@ -37,16 +37,21 @@ def load_shared_library(lib_base_name: str, base_path: pathlib.Path):
+     elif sys.platform.startswith("linux") or sys.platform.startswith("freebsd"):
          lib_paths += [
              base_path / f"lib{lib_base_name}.so",
 +            f"lib{lib_base_name}.so",
@@ -39,7 +41,7 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
          ]
      else:
          raise RuntimeError("Unsupported platform")
-@@ -62,14 +67,16 @@ def load_shared_library(lib_base_name: s
+@@ -97,14 +102,16 @@ def load_shared_library(lib_base_name: str, base_path: pathlib.Path):
  
      # Try to load the shared library, handling potential errors
      for lib_path in lib_paths:
@@ -58,6 +60,8 @@ Signed-off-by: Julien Jerphanion <git@jjerphan.xyz>
      )
  
  
+diff --git a/llama_cpp/llama_cpp.py b/llama_cpp/llama_cpp.py
+index 94e5aed..ef325ef 100644
 --- a/llama_cpp/llama_cpp.py
 +++ b/llama_cpp/llama_cpp.py
 @@ -3,6 +3,7 @@ from __future__ import annotations

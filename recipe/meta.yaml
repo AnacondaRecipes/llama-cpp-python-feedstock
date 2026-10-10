@@ -1,5 +1,5 @@
 {% set name = "llama-cpp-python" %}
-{% set version = "0.3.35" %}
+{% set version = "0.3.36" %}
 
 package:
   name: {{ name|lower }}
@@ -7,15 +7,13 @@ package:
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
-  sha256: 1139dbb54509074b70893fab8554e3b079aa9f4d312058ce4018ef0019e3de12
+  sha256: 832db0699007f1be95a7e41ef12e88926b02ba836461e36a36372db2760c1a2e
   patches:
     # Adapt shared library relocation for conda environments (find system llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
-    # Load ggml backends when using external llama.cpp (fixes issue #2069)
-    - 0002-Load-ggml-backends-for-external-llama.cpp.patch
 
 build:
-  number: 2
+  number: 0
   skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"  # [unix]
@@ -45,14 +43,11 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — pinned to a single build validated ABI-
-    # compatible with these 0.3.35 bindings (vendored b10454, 34 commits behind).
-    # The previous two-range pin (also allowing 0.3.0.10760, 306 commits ahead)
-    # let the solver pick a llama.cpp whose struct layout no longer matched the
-    # bindings, causing `llama_model_default_params().vocab_only == 32` on macOS
-    # and segfaults for consumers (Sep 2026 incident, Jim Kitchen / outerbounds).
-    # Widen only after a rebuild against the newer llama.cpp SHA.
-    - llama.cpp >=0.0.10488,<0.0.10489
+    # External llama.cpp: pin ONE release. The ctypes bindings mirror llama.h at one commit and
+    # ggml/llama.cpp have no stable ABI, so a wider pin can segfault consumers (Sep 2026 incident).
+    # 0.3.36 wraps 0c1e57098; llama.cpp 0.6.0 has identical struct layouts and function signatures.
+    # Re-verify the headers before moving this pin.
+    - llama.cpp >=0.6.0,<0.6.1
 
     # Server extras (no llama-cpp-python-server split package); kept in run:
     # for feature completeness. starlette-context <0.4 cap intentionally not
@@ -67,6 +62,8 @@ requirements:
 test:
   imports:
     - llama_cpp
+  source_files:
+    - vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf
   commands:
     - pip check
     # Verify external llama.cpp shared library loads successfully
@@ -80,6 +77,13 @@ test:
     # segfaulted. This test catches the same class of ABI drift at CI time.
     - |-
       python -c "from llama_cpp import llama_cpp; p = llama_cpp.llama_model_default_params(); assert p.vocab_only in (0, 1, False, True), f'ABI drift with external llama.cpp: vocab_only={p.vocab_only!r}'; print(f'ABI ok: vocab_only={bool(p.vocab_only)}')"
+    # llama_backend_init() must load the ggml backend plugins of the external llama.cpp by itself
+    # (no Python-side patch): count devices through libggml directly.
+    - |-
+      python -c "import ctypes, os, sys; from llama_cpp import llama_cpp as C; p = os.path.join(sys.prefix, 'Library', 'bin', 'ggml.dll') if os.name == 'nt' else os.path.join(sys.prefix, 'lib', 'libggml.dylib' if sys.platform == 'darwin' else 'libggml.so'); g = ctypes.CDLL(p); g.ggml_backend_dev_count.restype = ctypes.c_size_t; C.llama_backend_init(); n = g.ggml_backend_dev_count(); print('ggml devices:', n); assert n > 0, 'no ggml backend loaded'"
+    # Real C-API round trip: load a vocab-only model shipped in the sdist and tokenize/detokenize.
+    - |-
+      python -c "from llama_cpp import Llama; m = Llama(model_path='vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf', vocab_only=True, verbose=False); t = m.tokenize(b'Hello, world!'); assert len(t) > 1 and m.detokenize(t).strip() == b'Hello, world!', t; print('tokenize ok:', len(t), 'tokens')"
   requires:
     - pip
 
