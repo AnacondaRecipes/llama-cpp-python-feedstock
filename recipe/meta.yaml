@@ -1,21 +1,20 @@
 {% set name = "llama-cpp-python" %}
-{% set version = "0.3.35" %}
+{% set version = "0.3.36" %}
 
 package:
-  name: {{ name|lower }}
+  name: {{ name }}
   version: {{ version }}
 
 source:
   url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/llama_cpp_python-{{ version }}.tar.gz
-  sha256: 1139dbb54509074b70893fab8554e3b079aa9f4d312058ce4018ef0019e3de12
+  sha256: 832db0699007f1be95a7e41ef12e88926b02ba836461e36a36372db2760c1a2e
   patches:
-    # Adapt shared library relocation for conda environments (find system llama.cpp)
+    # Load libllama/libggml/libmtmd from the conda prefix by absolute path (external llama.cpp)
     - 0001-Adapt-shared-library-relocation.patch
-    # Load ggml backends when using external llama.cpp (fixes issue #2069)
-    - 0002-Load-ggml-backends-for-external-llama.cpp.patch
 
 build:
-  number: 2
+  number: 0
+  # Upstream supports 3.8, but starlette-context on the channel (>=0.4) needs Python >=3.9.
   skip: true  # [py<39]
   script:  # [unix]
     - export CMAKE_ARGS="${CMAKE_ARGS} -DLLAMA_BUILD=OFF"  # [unix]
@@ -45,18 +44,15 @@ requirements:
     - diskcache >=5.6.1
     - jinja2 >=2.11.3
 
-    # External llama.cpp package — pinned to a single build validated ABI-
-    # compatible with these 0.3.35 bindings (vendored b10454, 34 commits behind).
-    # The previous two-range pin (also allowing 0.3.0.10760, 306 commits ahead)
-    # let the solver pick a llama.cpp whose struct layout no longer matched the
-    # bindings, causing `llama_model_default_params().vocab_only == 32` on macOS
-    # and segfaults for consumers (Sep 2026 incident, Jim Kitchen / outerbounds).
-    # Widen only after a rebuild against the newer llama.cpp SHA.
-    - llama.cpp >=0.0.10488,<0.0.10489
+    # External llama.cpp: pin ONE release. The ctypes bindings mirror llama.h at one commit and
+    # ggml/llama.cpp have no stable ABI, so a wider pin can segfault consumers (Sep 2026 incident).
+    # 0.3.36 wraps 0c1e57098; llama.cpp 0.6.0 has identical struct layouts and function signatures.
+    # Re-verify the headers before moving this pin.
+    - llama.cpp >=0.6.0,<0.6.1
 
-    # Server extras (no llama-cpp-python-server split package); kept in run:
-    # for feature completeness. starlette-context <0.4 cap intentionally not
-    # enforced (server-side, not exercised by our import test).
+    # Server extras, kept in run: so the bundled server works out of the box.
+    # Approved deviation: upstream caps starlette-context <0.4, but the channel only has 0.4.0
+    # and 0.5.1 (0.4 dropped Python 3.8). The server app is verified on both; see the test below.
     - uvicorn >=0.22.0
     - fastapi >=0.100.0
     - pydantic-settings >=2.0.1
@@ -67,19 +63,32 @@ requirements:
 test:
   imports:
     - llama_cpp
+    - llama_cpp._ggml
+    - llama_cpp.mtmd_cpp
+    - llama_cpp.server.app
+  source_files:
+    - vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf
   commands:
     - pip check
     # Verify external llama.cpp shared library loads successfully
     - python -c "from llama_cpp import llama_cpp; print(llama_cpp._lib)"
-    # ABI smoke test — dlopen alone doesn't catch struct-layout drift between
-    # our vendored ctypes bindings and the external llama.cpp .so. Call a
-    # struct-returning C entry point and sanity-check a known-default field.
-    # Regression fixture for the Sep 2026 pin-widening incident: the previous
-    # build shipped bindings against a llama.cpp whose `llama_model_params`
-    # layout differed, so `vocab_only` read as 32 instead of 0/1 and consumers
-    # segfaulted. This test catches the same class of ABI drift at CI time.
+    # Every native library must come from this environment's prefix by absolute path, never from
+    # the working directory or another ambient search location.
     - |-
-      python -c "from llama_cpp import llama_cpp; p = llama_cpp.llama_model_default_params(); assert p.vocab_only in (0, 1, False, True), f'ABI drift with external llama.cpp: vocab_only={p.vocab_only!r}'; print(f'ABI ok: vocab_only={bool(p.vocab_only)}')"
+      python -c "import os, sys; from llama_cpp import llama_cpp as C, mtmd_cpp as M, _ggml as G; root = os.path.normcase(os.path.realpath(sys.prefix)) + os.sep; libs = [C._lib._name, M._libmtmd._name, G.libggml._name]; bad = [n for n in libs if not os.path.normcase(os.path.realpath(n)).startswith(root)]; assert not bad, f'library loaded from outside the prefix: {bad}'; print('libraries:', libs)"
+    # ABI drift check (Sep 2026 incident: vocab_only read as 32). ctypes maps any nonzero c_bool
+    # byte to True, so check the raw bytes of every bool field in both default-params structs.
+    - |-
+      python -c "import ctypes; from llama_cpp import llama_cpp as C; bad = [(type(s).__name__, n) for s in (C.llama_model_default_params(), C.llama_context_default_params()) for n, t, *_ in s._fields_ if t is ctypes.c_bool and ctypes.string_at(ctypes.addressof(s) + getattr(type(s), n).offset, 1)[0] > 1]; assert not bad, f'ABI drift with external llama.cpp, non-boolean bytes in {bad}'; print('ABI ok')"
+    # llama_backend_init() must load the ggml backend plugins of the external llama.cpp by itself.
+    - |-
+      python -c "import ctypes; from llama_cpp import llama_cpp as C; from llama_cpp._ggml import libggml as g; g.ggml_backend_dev_count.restype = ctypes.c_size_t; C.llama_backend_init(); n = g.ggml_backend_dev_count(); print('ggml devices:', n); assert n > 0, 'no ggml backend loaded'"
+    # Real C-API round trip: load a vocab-only model shipped in the sdist and tokenize/detokenize.
+    - |-
+      python -c "from llama_cpp import Llama; m = Llama(model_path='vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf', vocab_only=True, verbose=False); t = m.tokenize(b'Hello, world!'); assert len(t) > 1 and m.detokenize(t).strip() == b'Hello, world!', t; print('tokenize ok:', len(t), 'tokens')"
+    # Server app with the channel's starlette-context: build it and check upstream's middleware.
+    - |-
+      python -c "from llama_cpp.server.app import create_app; from llama_cpp.server.settings import ModelSettings, ServerSettings; app = create_app(server_settings=ServerSettings(), model_settings=[ModelSettings(model='vendor/llama.cpp/models/ggml-vocab-llama-spm.gguf', vocab_only=True, verbose=False)]); m = [x.cls.__name__ for x in app.user_middleware]; assert 'RawContextMiddleware' in m, m; print('server app ok:', m)"
   requires:
     - pip
 
